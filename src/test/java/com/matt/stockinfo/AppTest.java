@@ -1,38 +1,45 @@
 package com.matt.stockinfo;
 
-import junit.framework.Test;
-import junit.framework.TestCase;
-import junit.framework.TestSuite;
+import static org.junit.Assert.assertNotNull;
 
-/**
- * Unit test for simple App.
- */
-public class AppTest 
-    extends TestCase
-{
-    /**
-     * Create the test case
-     *
-     * @param testName name of the test case
-     */
-    public AppTest( String testName )
-    {
-        super( testName );
-    }
+import java.util.List;
+import java.util.Map;
 
-    /**
-     * @return the suite of tests being tested
-     */
-    public static Test suite()
-    {
-        return new TestSuite( AppTest.class );
-    }
+import javax.sql.DataSource;
 
-    /**
-     * Rigourous Test :-)
-     */
-    public void testApp()
-    {
-        assertTrue( true );
-    }
+import org.junit.Test;
+import org.springframework.boot.jdbc.DataSourceBuilder;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+public class AppTest {
+
+	@Test
+	public void dbTest() {
+		try {
+			//Class.forName("org.sqlite.JDBC");
+			
+			DataSourceBuilder dataSourceBuilder = DataSourceBuilder.create();
+	        dataSourceBuilder.driverClassName("org.sqlite.JDBC");
+	        dataSourceBuilder.url("jdbc:sqlite:src/main/resources/stocks.db");
+	        dataSourceBuilder.type(org.sqlite.SQLiteDataSource.class);
+	        DataSource dataSource = dataSourceBuilder.build();
+	        
+	        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+	        List<Map<String,Object>> res = jdbcTemplate.queryForList("SELECT * from nasdaq limit 10");
+	        
+	        assertNotNull(res);
+	        
+	        for(Map m : res) {
+	        	for(Object s : m.keySet()) {
+	        		System.out.println(s);
+	        	}
+	        }
+			
+			
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 }
