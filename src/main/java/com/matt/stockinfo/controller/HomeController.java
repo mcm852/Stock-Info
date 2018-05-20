@@ -10,10 +10,5 @@ public class HomeController {
     public String index(){
         return "index";
     }
-	
-//	@RequestMapping(value = "/search", method = RequestMethod.GET)
-//	public ResponseEntity<?> search(@RequestParam(value="name", required = true) String name) {
-//		
-//	}
 
 }

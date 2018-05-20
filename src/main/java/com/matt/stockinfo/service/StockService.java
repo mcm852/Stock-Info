@@ -21,8 +21,10 @@ public class StockService {
 	@RequestMapping(name = "/symbols", method = RequestMethod.GET)
 	ResponseEntity<?> getSymbols(@RequestParam(value="name", required=true) String name) {
 		
-		List<Map<String,Object>> res = jdbcTemplate.queryForList("SELECT * FROM stocks "
+		List<Map<String,Object>> res = jdbcTemplate.queryForList("SELECT Symbol, Name FROM stocks "
 				+ "where Name like '" + name + "%';");
+		
+		System.out.println("Returning results");
 		
 		return new ResponseEntity<>(res, HttpStatus.OK);
 	}
