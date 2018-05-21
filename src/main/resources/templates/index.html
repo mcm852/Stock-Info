@@ -18,23 +18,28 @@
 
 	<div id="root">
 		<div id="search">
-			<input type="text"  v-on:keyup.enter="doSearch" v-model="nameText" class="u-full-width"
+		<form v-on:submit.prevent="onSubmit">
+			<input type="text" v-model="nameText" class="u-full-width"
 				placeholder="Stock Name" id="name"></input>
-			<input type="submit" v-on:click="doSearch" value="search" />
+			<input type="submit" v-on:click="doSearch" value="Search" />
+		</form>
 		</div>
 	
 		<div class="stocks">
 			<h2>Stocks</h2>
 			<ul>
 				<li v-for="stock in results">
-					<b>{{stock.Name}}</b>
-					<b>{{stock.Symbol}}</b>
+					<a v-on:click.prevent v-on:click="getStockData(stock.Symbol)" href=""><b>{{stock.Name}} - {{stock.Symbol}}</b></a>
 				</li>
 			</ul>
 		</div>
+		
+		<div id="graph-container" style="height: 300px; width: 100%;">
+			<canvas id="results-graph"></canvas>
+		</div>
+		
 	</div>
 
-	
 
 	<script
 		src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js"
@@ -45,23 +50,77 @@
 		integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T"
 		crossorigin="anonymous"></script>
 	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+	<script src="https://unpkg.com/vue-chartjs/dist/vue-chartjs.min.js"></script>
+	<script src="https://canvasjs.com/assets/script/jquery-1.11.1.min.js"></script>
+	<script src="https://canvasjs.com/assets/script/jquery.canvasjs.min.js"></script>
 </body>
 
 <script>
+var dataPoints = [];
+var options =  {
+		animationEnabled: true,
+		theme: "light2",
+		title: {
+			text: "Average Historic Quote for Past 30 Days"
+		},
+		axisX: {
+			valueFormatString: "DD MMM YYYY",
+		},
+		axisY: {
+			title: "Average Historic Quote- ",
+			titleFontSize: 24,
+			includeZero: false
+		},
+		data: [{
+			type: "spline", 
+			yValueFormatString: "$#,###.##",
+			dataPoints: dataPoints
+		}]
+	};
+var chart = new CanvasJS.Chart("graph-container", options);
+
 var app = new Vue({
 	  el: '#root',
 	  data: {
 		nameText : '',  
-	    results: []
+	    results: [],
+	    stockData : []
 	  },
 	  methods : {
 		  doSearch(){
               axios.get("/symbols?name=" + this.nameText).then(function(response){
                   this.results = response.data;
               }.bind(this));
-          }
+              chart = new CanvasJS.Chart("graph-container", options);
+          },
+		  getStockData(symbol) {
+        	  console.log("Selected " + symbol)
+			  axios.get("https://api.iextrading.com/1.0/stock/" + symbol + "/chart/1m").then(function(response) {
+				  console.log(response.data);
+				  for(var i = 0; i < response.data.length; ++i) {
+					  var avgHistoricQuote = (response.data[i].high + response.data[i].low + response.data[i].open + response.data[i].close) / 4
+					  console.log("Average quote for " + response.data[i].date + ": " + avgHistoricQuote)
+					  dataPoints.push( {
+						  x: new Date(response.data[i].date),
+						  y: avgHistoricQuote
+					  });
+				  }
+				  options.data[0].dataPoints = dataPoints;
+				  this.stockData = response.data;
+				  //$("#results-graph").CanvasJSChart(options);
+// 				  if(chart.data != null) {
+// 					  chart.data = null;
+// 				  }
+				  chart.destroy();
+				  chart = new CanvasJS.Chart("graph-container", options);
+				  chart.render();
+				  dataPoints = [];
+			  }.bind(this));
+		  }
 	  }
 	})
+
 </script>
 
 </html>

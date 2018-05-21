@@ -22,7 +22,7 @@ public class StockService {
 	ResponseEntity<?> getSymbols(@RequestParam(value="name", required=true) String name) {
 		
 		List<Map<String,Object>> res = jdbcTemplate.queryForList("SELECT Symbol, Name FROM stocks "
-				+ "where Name like '" + name + "%';");
+				+ "where Name like '" + name + "%' ORDER BY Name;");
 		
 		System.out.println("Returning results");
 		
