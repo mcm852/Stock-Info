@@ -36,7 +36,9 @@
 		</div>
 		
 		<div id="graph-container" style="height: 300px; width: 100%;">
-			<canvas id="results-graph"></canvas>
+		</div>
+		
+		<div id="candle-graph-container" style="height: 300px; width: 100%;">
 		</div>
 		
 	</div>
@@ -58,8 +60,10 @@
 </body>
 
 <script>
-var dataPoints = [];
-var options =  {
+var lineDataPoints = [];
+var candleDataPoints = [];
+
+var lineOptions =  {
 		animationEnabled: true,
 		theme: "light2",
 		title: {
@@ -71,15 +75,42 @@ var options =  {
 		axisY: {
 			title: "Average Historic Quote",
 			titleFontSize: 24,
+			prefix: "$",
 			includeZero: false
 		},
 		data: [{
 			type: "line", 
 			yValueFormatString: "$#,###.##",
-			dataPoints: dataPoints
+			dataPoints: lineDataPoints
 		}]
 	};
-var chart = new CanvasJS.Chart("graph-container", options);
+var candleOptions =  {
+		animationEnabled: true,
+		theme: "light2",
+		title: {
+			text: "Stock Prices- "
+		},
+		axisX: {
+			interval: 1,
+			valueFormatString: "MMM"
+		},
+		axisY: {
+			includeZero: false,
+			prefix: "$",
+			title: "Price",
+			titleFontSize: 24,
+		},
+		toolTip: {
+			content: "Date: {x}<br /><strong>Price:</strong><br />Open: {y[0]}, Close: {y[3]}<br />High: {y[1]}, Low: {y[2]}"
+		},
+		data: [{
+			type: "candlestick",
+			yValueFormatString: "$##0.00",
+			dataPoints: candleDataPoints
+		}]
+	};
+var lineChart = new CanvasJS.Chart("graph-container", lineOptions);
+var candleChart = new CanvasJS.Chart("candle-graph-container", candleOptions);
 
 var app = new Vue({
 	  el: '#root',
@@ -102,19 +133,33 @@ var app = new Vue({
 				  for(var i = 0; i < response.data.length; ++i) {
 					  var avgHistoricQuote = (response.data[i].high + response.data[i].low + response.data[i].open + response.data[i].close) / 4
 					  console.log("Average quote for " + response.data[i].date + ": " + avgHistoricQuote)
-					  dataPoints.push( {
+					  lineDataPoints.push( {
 						  x: new Date(response.data[i].date),
 						  y: avgHistoricQuote
 					  });
+					  candleDataPoints.push( {
+						  x: new Date(response.data[i].date),
+						  y: [response.data[i].open, response.data[i].high, response.data[i].low, response.data[i].close]
+					  });
 				  }
-				  options.data[0].dataPoints = dataPoints;
-				  options.title.text = "Average Historic Quote for Past 30 Days- " + symbol;
+				  lineOptions.data[0].dataPoints = lineDataPoints;
+				  lineOptions.title.text = "Average Historic Quote for Past 30 Days- " + symbol;
 				  this.stockData = response.data;
 
-				  chart.destroy();
-				  chart = new CanvasJS.Chart("graph-container", options);
-				  chart.render();
-				  dataPoints = [];
+				  lineChart.destroy();
+				  lineChart = new CanvasJS.Chart("graph-container", lineOptions);
+				  lineChart.render();
+				  lineDataPoints = [];
+				  
+				  candleOptions.data[0].dataPoints = candleDataPoints;
+				  candleOptions.title.text = "Stock Prices for Past 30 Days- " + symbol;
+				  
+				  candleChart.destroy();
+				  candleChart = new CanvasJS.Chart("candle-graph-container", candleOptions);
+				  candleChart.render();
+				  candleDataPoints = [];
+				  
+				  
 			  }.bind(this));
 		  }
 	  }
