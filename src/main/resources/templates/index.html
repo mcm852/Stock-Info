@@ -5,6 +5,7 @@
 <meta name="viewport"
 	content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+<link rel="stylesheet" href="../static/css/style.css">
 <!-- Bootstrap CSS -->
 <link rel="stylesheet"
 	href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
@@ -19,15 +20,15 @@
 	<div id="root">
 		<div id="search">
 		<form v-on:submit.prevent="onSubmit">
-			<input type="text" v-model="nameText" class="u-full-width"
-				placeholder="Stock Name" id="name"></input>
-			<input type="submit" v-on:click="doSearch" value="Search" />
+			<center><input type="text" v-model="nameText" class="u-full-width"
+				placeholder="Stock Name" id="name"></input>	
+			<input type="submit" v-on:click="doSearch" value="Search" /></center>
 		</form>
 		</div>
 	
-		<div class="stocks">
+		<div class="jumbotron">
 			<h2>Stocks</h2>
-			<ul>
+			<ul style="columns:4;  margin-right: 20px">
 				<li v-for="stock in results">
 					<a v-on:click.prevent v-on:click="getStockData(stock.Symbol)" href=""><b>{{stock.Name}} - {{stock.Symbol}}</b></a>
 				</li>
@@ -68,12 +69,12 @@ var options =  {
 			valueFormatString: "DD MMM YYYY",
 		},
 		axisY: {
-			title: "Average Historic Quote- ",
+			title: "Average Historic Quote",
 			titleFontSize: 24,
 			includeZero: false
 		},
 		data: [{
-			type: "spline", 
+			type: "line", 
 			yValueFormatString: "$#,###.##",
 			dataPoints: dataPoints
 		}]
@@ -92,10 +93,10 @@ var app = new Vue({
               axios.get("/symbols?name=" + this.nameText).then(function(response){
                   this.results = response.data;
               }.bind(this));
-              chart = new CanvasJS.Chart("graph-container", options);
           },
 		  getStockData(symbol) {
         	  console.log("Selected " + symbol)
+        	  sym = symbol;
 			  axios.get("https://api.iextrading.com/1.0/stock/" + symbol + "/chart/1m").then(function(response) {
 				  console.log(response.data);
 				  for(var i = 0; i < response.data.length; ++i) {
@@ -107,11 +108,9 @@ var app = new Vue({
 					  });
 				  }
 				  options.data[0].dataPoints = dataPoints;
+				  options.title.text = "Average Historic Quote for Past 30 Days- " + symbol;
 				  this.stockData = response.data;
-				  //$("#results-graph").CanvasJSChart(options);
-// 				  if(chart.data != null) {
-// 					  chart.data = null;
-// 				  }
+
 				  chart.destroy();
 				  chart = new CanvasJS.Chart("graph-container", options);
 				  chart.render();
